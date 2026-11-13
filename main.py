@@ -3,7 +3,7 @@ import socket
 import json
 import sys
 import random
-from helpers import Level, PhysicsController
+import helpers
 
 # Game Settings & Network Targeting
 WIDTH, HEIGHT = 1920, 1080
@@ -22,6 +22,9 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption(f"ESP32 Multi-Player Game - {PLAYER_ID}")
 clock = pygame.time.Clock()
 
+#Game Initializations
+level = helpers.Level("box")
+character = helpers.Character("tree_bert", helpers.PhysicsController(gravity=0.5, jumpVelocity=-10, sprite=None, xDrift=0))
 # Local Player State
 player_x, player_y = 100, 100
 current_frame = 0
