@@ -5,16 +5,22 @@ import sys
 import random
 import helpers
 
+
+#Debug Flags
+DEBUG = True
+SP_DEBUG = True
+
 # Game Settings & Network Targeting
 WIDTH, HEIGHT = 1920, 1080
 FPS = 20  # 50ms intervals
-SERVER_IP = "192.168.4.1"
-SERVER_PORT = 5005
-PLAYER_ID = f"Player_{random.randint(1000, 9999)}" # Unique identifier
+if not SP_DEBUG:
+    SERVER_IP = "192.168.4.1"
+    SERVER_PORT = 5005
+    PLAYER_ID = f"Player_{random.randint(1000, 9999)}" # Unique identifier
 
-# Initialize Network Socket
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-client_socket.setblocking(False) # Non-blocking so networking doesn't freeze frame updates
+    # Initialize Network Socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client_socket.setblocking(False) # Non-blocking so networking doesn't freeze frame updates
 
 # Initialize Pygame
 pygame.init()
@@ -25,6 +31,7 @@ clock = pygame.time.Clock()
 #Game Initializations
 level = helpers.Level("box")
 character = helpers.Character("tree_bert", helpers.PhysicsController(gravity=0.5, jumpVelocity=-10, sprite=None, xDrift=0))
+
 # Local Player State
 player_x, player_y = 100, 100
 current_frame = 0
@@ -38,40 +45,53 @@ while running:
             running = False
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:  player_x -= 5
-    if keys[pygame.K_RIGHT]: player_x += 5
-    if keys[pygame.K_UP]:    player_y -= 5
-    if keys[pygame.K_DOWN]:  player_y += 5
-    if keys[pygame.K_ESCAPE]: running = False
+    if keys[pygame.K_LEFT]:
+        player_x -= 5; if DEBUG: print("left key")
+    if keys[pygame.K_RIGHT]:
+        player_x += 5; if DEBUG: print("right key")
+    if keys[pygame.K_UP]:
+        player_y -= 5; if DEBUG: print("up key")
+    if keys[pygame.K_DOWN]:
+        player_y += 5; if DEBUG: print("down key")
+    if keys[pygame.K_ESCAPE]:
+        running = False; if DEBUG: print("esc key")
 
     # Cycle animation frame index dummy tracker
     #current_frame = (current_frame+1)%4
 
     # 2. Transmit Local State to ESP32
-    local_data = {
-        "id": PLAYER_ID,
-        "x": player_x,
-        "y": player_y,
-        "frame": current_frame
-    }
-    try:
-        payload = json.dumps(local_data).encode('utf-8')
-        client_socket.sendto(payload, (SERVER_IP, SERVER_PORT))
-    except Exception as e:
-        print(f"Send Error: {e}")
+    if not SP_DEBUG:
+        local_data = {
+            "id": PLAYER_ID,
+            "x": player_x,
+            "y": player_y,
+            "frame": current_frame
+        }
+        try:
+            payload = json.dumps(local_data).encode('utf-8')
+            client_socket.sendto(payload, (SERVER_IP, SERVER_PORT))
+            print(f"Sent: {local_data}")
+        except Exception as e:
+            print(f"Send Error: {e}")
 
-    # 3. Receive Global State Update from ESP32
-    try:
-        # Drain the network buffer to get the absolute newest packet
-        while True:
-            data, addr = client_socket.recvfrom(2048)
-            all_players_data = json.loads(data.decode('utf-8'))
-    except BlockingIOError:
-        # Thrown when buffer becomes empty. This is expected.
-        pass
-    except Exception as e:
-        print(f"Receive Error: {e}")
+        # 3. Receive Global State Update from ESP32
+        try:
+            # Drain the network buffer to get the absolute newest packet
+            while True:
+                data, addr = client_socket.recvfrom(2048)
+                all_players_data = json.loads(data.decode('utf-8'))
+        except BlockingIOError:
+            # Thrown when buffer becomes empty. This is expected.
+            pass
+        except Exception as e:
+            print(f"Receive Error: {e}")
 
+    if SP_DEBUG:
+        # Simulate networked players for singleplayer debug mode
+        all_players_data = {
+            PLAYER_ID: {"x": player_x, "y": player_y, "frame": current_frame},
+            "Player_1234": {"x": 400, "y": 300, "frame": 1}
+        }
     # 4. Render Scene
     screen.fill((30, 30, 30)) # Dark gray background
     screen.blit(level.levelImage)
