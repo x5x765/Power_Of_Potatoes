@@ -46,15 +46,20 @@ while running:
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
-        player_x -= 5; if DEBUG: print("left key")
+        player_x -= 5
+        if DEBUG: print("left key")
     if keys[pygame.K_RIGHT]:
-        player_x += 5; if DEBUG: print("right key")
+        player_x += 5
+        if DEBUG: print("right key")
     if keys[pygame.K_UP]:
-        player_y -= 5; if DEBUG: print("up key")
+        player_y -= 5
+        if DEBUG: print("up key")
     if keys[pygame.K_DOWN]:
-        player_y += 5; if DEBUG: print("down key")
+        player_y += 5
+        if DEBUG: print("down key")
     if keys[pygame.K_ESCAPE]:
-        running = False; if DEBUG: print("esc key")
+        running = False
+        if DEBUG: print("esc key")
 
     # Cycle animation frame index dummy tracker
     #current_frame = (current_frame+1)%4
@@ -108,8 +113,8 @@ while running:
         
         # Display Text Info overhead
         font = pygame.font.SysFont(None, 20)
-        img = font.render(f"{pid} (F:{frame})", True, (255, 255, 255))
-        screen.blit(img, (x - 30, y - 40))
+        data_img = font.render(f"{pid} (F:{frame})", True, (255, 255, 255))
+        screen.blit(data_img, (x - 30, y - 40))
 
     pygame.display.flip()
     clock.tick(FPS) # Locks the Pygame loop securely at 20 frames per second
